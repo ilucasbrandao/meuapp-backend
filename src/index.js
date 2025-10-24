@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import customerRoutes from './routes/customer.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 // Carrega o .env
 dotenv.config();
@@ -25,6 +26,7 @@ app.use(express.json()); // Para ler JSON no body
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Rotas de teste (pode remover ou manter)
 app.get("/", (req, res) => {

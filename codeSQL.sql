@@ -147,3 +147,77 @@ VALUES (
         'Novo Cliente da Empresa B',
         'novocliente@empresaB.com'
     );
+
+------------------------------------------------------------------------ 24/10/2025 -----------------------------------------------------------------------------------
+
+-- Adiciona a coluna de status
+ALTER TABLE public.tenants
+ADD COLUMN status VARCHAR(20) DEFAULT 'pending' NOT NULL;
+
+-- Atualiza seus tenants de demo para 'active'
+UPDATE public.tenants
+SET
+    status = 'active'
+WHERE
+    schema_name IN ('tenant_a', 'tenant_b');
+
+-- Ponto 1: Garante que a coluna 'status' existe na tabela de tenants
+-- (O 'IF NOT EXISTS' evita erro se você já a criou)
+ALTER TABLE public.tenants
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending' NOT NULL;
+-- (Isso confirma seu ponto: o default é 'pending')
+
+-- Ponto 2: Precisamos saber quem é admin. Vamos adicionar um 'role' nos usuários.
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user' NOT NULL;
+
+-- Ponto 3: O contador de acessos que você pediu.
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS login_count INT DEFAULT 0 NOT NULL;
+
+-- Ponto 4: Promover um admin com um usuario existente
+UPDATE public.users
+SET role = 'admin'
+WHERE
+    email = 'user@empresa-a.com';
+
+CREATE TABLE public.sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    user_id UUID NOT NULL REFERENCES public.users (id) ON DELETE CASCADE,
+    tenant_id UUID NOT NULL REFERENCES public.tenants (id) ON DELETE CASCADE,
+    -- Guardamos o token (ou parte dele) para invalidar
+    token_signature VARCHAR(255) NOT NULL UNIQUE,
+    ip_address VARCHAR(50),
+    user_agent TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_seen TIMESTAMPTZ DEFAULT NOW()
+);
+-- Índice para buscas rápidas
+CREATE INDEX idx_sessions_user_id ON public.sessions (user_id);
+
+-- 1. Remove a coluna antiga que não precisamos mais
+ALTER TABLE public.sessions DROP COLUMN IF EXISTS token_signature;
+
+-- 2. Garante que a coluna 'id' é a chave primária
+-- (Seu script original já deve ter feito isso, mas só para garantir)
+ALTER TABLE public.sessions ADD PRIMARY KEY IF NOT EXISTS (id);
+
+-- 3. (Opcional, mas recomendado) Adicionar um índice no user_id para performance
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON public.sessions (user_id);
+
+-- 1. Adiciona a coluna para guardar o limite de licenças, com um padrão de 3
+ALTER TABLE public.tenants
+ADD COLUMN IF NOT EXISTS license_limit INT DEFAULT 3 NOT NULL;
+
+-- 2. (Opcional) Vamos definir limites diferentes para seus tenants de teste
+UPDATE public.tenants
+SET
+    license_limit = 3
+WHERE
+    schema_name = 'tenant_a';
+
+UPDATE public.tenants
+SET
+    license_limit = 5 -- A Empresa B comprou 5 licenças
+WHERE
+    schema_name = 'tenant_b';

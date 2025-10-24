@@ -1,22 +1,12 @@
-import { Router } from "express";
-import {
-  getProducts,
-  createProduct,
-} from "../controllers/product.controller.js";
-import {
-  protectAndSetTenant,
-  releaseClient,
-} from "../middlewares/auth.middleware.js";
+import { Router } from 'express';
+import { getProducts, createProduct } from '../controllers/product.controller.js';
+import { protectSession } from '../middlewares/auth.middleware.js';
+import { setTenantPath } from '../middlewares/tenant.middleware.js';
 
 const router = Router();
 
-// Sequência de execução:
-// 1. 'protectAndSetTenant' (verifica token, SETA O SEARCH_PATH)
-// 2. 'getProducts' (executa a query genérica)
-// 3. 'releaseClient' (libera a conexão)
-router
-  .route("/")
-  .get(protectAndSetTenant, getProducts, releaseClient)
-  .post(protectAndSetTenant, createProduct, releaseClient);
+router.route('/')
+  .get(protectSession, setTenantPath, getProducts)
+  .post(protectSession, setTenantPath, createProduct);
 
 export default router;
