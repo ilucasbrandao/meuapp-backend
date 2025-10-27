@@ -221,3 +221,34 @@ SET
     license_limit = 5 -- A Empresa B comprou 5 licenças
 WHERE
     schema_name = 'tenant_b';
+
+---------------------------------------------------
+-- Adiciona as novas colunas à tabela 'customers'
+ALTER TABLE customers
+
+-- 1. Identificação (CPF/CNPJ)
+ADD COLUMN document_type VARCHAR(2) CHECK (document_type IN ('PF', 'PJ')),
+ADD COLUMN document_number VARCHAR(18),
+
+-- 2. Endereço Completo
+ADD COLUMN address_zip_code VARCHAR(9),
+ADD COLUMN address_street TEXT,
+ADD COLUMN address_number VARCHAR(20),
+ADD COLUMN address_complement TEXT,
+ADD COLUMN address_neighborhood TEXT,
+ADD COLUMN address_city TEXT,
+ADD COLUMN address_state VARCHAR(2),
+
+-- 3. Organização e Marketing
+ADD COLUMN status VARCHAR(20) DEFAULT 'ativo' NOT NULL, -- 'ativo' como padrão
+ADD COLUMN birth_date DATE,
+ADD COLUMN notes TEXT;
+
+-- (Opcional, mas RECOMENDADO)
+-- Cria um índice único para o documento.
+-- Isso impede que o empreendedor cadastre o mesmo cliente (mesmo CPF/CNPJ) duas vezes.
+-- Usamos COALESCE para permitir múltiplos clientes com documento 'NULL' (não preenchido).
+CREATE UNIQUE INDEX idx_customers_unique_document ON customers (
+    document_number,
+    COALESCE(document_type, '')
+);
