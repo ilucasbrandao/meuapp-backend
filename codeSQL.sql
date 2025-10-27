@@ -252,3 +252,22 @@ CREATE UNIQUE INDEX idx_customers_unique_document ON customers (
     document_number,
     COALESCE(document_type, '')
 );
+
+---------------------------------------------------------------------------- 27/10/2025
+ALTER TABLE products
+ADD COLUMN IF NOT EXISTS price_cents INTEGER DEFAULT 0;
+
+ALTER TABLE products
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+
+
+ALTER TABLE tenant_a.products
+ADD COLUMN IF NOT EXISTS sku VARCHAR(100) UNIQUE, -- SKU único por tenant
+ADD COLUMN IF NOT EXISTS stock_quantity INTEGER DEFAULT 0 NOT NULL CHECK (stock_quantity >= 0), -- Estoque não negativo
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active' NOT NULL CHECK (status IN ('active', 'inactive')); -- Status Ativo/Inativo
+
+-- Adiciona as colunas para TENANT B (repita para outros)
+ALTER TABLE tenant_b.products
+ADD COLUMN IF NOT EXISTS sku VARCHAR(100) UNIQUE,
+ADD COLUMN IF NOT EXISTS stock_quantity INTEGER DEFAULT 0 NOT NULL CHECK (stock_quantity >= 0),
+ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active' NOT NULL CHECK (status IN ('active', 'inactive'));
