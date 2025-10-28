@@ -271,3 +271,20 @@ ALTER TABLE tenant_b.products
 ADD COLUMN IF NOT EXISTS sku VARCHAR(100) UNIQUE,
 ADD COLUMN IF NOT EXISTS stock_quantity INTEGER DEFAULT 0 NOT NULL CHECK (stock_quantity >= 0),
 ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active' NOT NULL CHECK (status IN ('active', 'inactive'));
+
+
+----------------------------------------------------------------------------------- 28/10/2025
+
+-- Adiciona as colunas ausentes para TENANT A
+ALTER TABLE tenant_a.products
+ADD COLUMN IF NOT EXISTS category VARCHAR(255), -- Ou TEXT
+ADD COLUMN IF NOT EXISTS unit_of_measure VARCHAR(20) DEFAULT 'un' NOT NULL,
+ADD COLUMN IF NOT EXISTS cost_price_cents INTEGER DEFAULT 0 NOT NULL CHECK (cost_price_cents >= 0),
+ADD COLUMN IF NOT EXISTS description TEXT;
+
+-- Adiciona as colunas ausentes para TENANT B (Repita para outros tenants existentes)
+ALTER TABLE tenant_b.products
+ADD COLUMN IF NOT EXISTS category VARCHAR(255),
+ADD COLUMN IF NOT EXISTS unit_of_measure VARCHAR(20) DEFAULT 'un' NOT NULL,
+ADD COLUMN IF NOT EXISTS cost_price_cents INTEGER DEFAULT 0 NOT NULL CHECK (cost_price_cents >= 0),
+ADD COLUMN IF NOT EXISTS description TEXT;

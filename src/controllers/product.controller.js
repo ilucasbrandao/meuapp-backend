@@ -1,3 +1,9 @@
+const isValidUUID = (uuid) => {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return typeof uuid === "string" && uuidRegex.test(uuid);
+};
+
 // GET /products (Listar produtos com paginação, busca e ordenação)
 export const getProducts = async (req, res) => {
   const client = req.dbClient;
@@ -162,10 +168,10 @@ export const getProductById = async (req, res) => {
   const client = req.dbClient;
   const { id } = req.params;
 
-  if (!id || typeof id !== "string" || !/^\d+$/.test(id)) {
+  if (!isValidUUID(id)) {
     return res
       .status(400)
-      .json({ message: "ID do produto inválido (deve ser numérico)" });
+      .json({ message: "ID do produto inválido (formato UUID esperado)" });
   }
 
   try {
@@ -201,9 +207,13 @@ export const updateProduct = async (req, res) => {
   } = req.body;
 
   // --- Validações ---
-  if (!id || typeof id !== "string" || !/^\d+$/.test(id)) {
-    return res.status(400).json({ message: "ID inválido" });
+  if (!isValidUUID(id)) {
+    // Deve ser isValidUUID
+    return res
+      .status(400)
+      .json({ message: "ID inválido (formato UUID esperado)" });
   }
+
   if (!name || typeof name !== "string" || name.trim().length < 3) {
     return res.status(400).json({ message: "Nome inválido" });
   }
@@ -284,15 +294,17 @@ export const deleteProduct = async (req, res) => {
   const client = req.dbClient;
   const { id } = req.params;
 
-  if (!id || typeof id !== "string" || !/^\d+$/.test(id)) {
-    return res.status(400).json({ message: "ID inválido" });
+  if (!isValidUUID(id)) {
+    return res
+      .status(400)
+      .json({ message: "ID inválido (formato UUID esperado)" });
   }
 
   try {
     const result = await client.query(
       "DELETE FROM products WHERE id = $1 RETURNING id",
       [id]
-    );
+    ); // Query usa UUID
     if (result.rowCount === 0) {
       return res
         .status(404)
